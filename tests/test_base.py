@@ -100,3 +100,84 @@ class TestBasicQint(unittest.TestCase):
             os.remove(self.qclass.qasmDir)
         except:
             print("Couldn't remove compiled OpenQASM at %s location" % self.qclass.qasmDir)
+
+    def test_nothing(self):
+        """
+        Tests that qint works with no arguements
+        """
+        thisInt = qint(self.qclass)
+        thisInt.measure()
+        result = self.qclass.get_result()
+        self.assertEqual(thisInt.extract_result(result), 0)
+
+    def test_initial(self):
+        """
+        Tests that qint appropriately assigns an intial value
+        """
+        thisInt = qint(self.qclass, value= 9)
+        thisInt.measure()
+        result = self.qclass.get_result()
+        self.assertEqual(thisInt.extract_result(result), 9)
+
+    def test_small_size(self):
+        """
+        Tests that a small qint holds a values from 0-31
+        """
+        thisInt = qint(self.qclass, value= 31, small= True)
+        thisInt.measure()
+        result = self.qclass.get_result()
+        self.assertEqual(thisInt.extract_result(result), 31)
+
+    def test_small_overflow(self):
+        self.assertRaises(OverflowError, qint(self.qclass, value= 32, small= True))
+
+    def test_large_size(self):
+        """
+        Tests whether a large qint can hold extra large values
+        """
+        thisInt = qint(self.qclass, value= 2**31, big= True)
+        thisInt.measure()
+        result = self.qclass.get_result()
+        self.assertEqual(thisInt.extract_result(result), 2**31)
+    
+    def test_overflow(self):
+        """
+        Tests whether a qint properly overflows
+        """
+        thisInt = qint(self.qclass, value= 2**14)
+        self.assertEqual(len(thisInt.qubits), 32)
+
+    def test_specify_size(self):
+        """
+        Tests whether custom sizes are properly alloted
+        """
+        thisInt = qint(self.qclass, size= 4)
+        self.assertEqual(len(thisInt.qubits), 4)
+
+    def test_rand_small(self):
+        """
+        Tests whether quantrand stays within a small range
+        """
+        iterations = 100
+        for i in range(iterations):
+            self.assertIn(qint.quantrand(0, 16), range(0, 16))
+
+    def test_rand_big(self):
+        """
+        Tests whether quantrand stays within a large range
+        """
+        iterations = 100
+        for i in range(iterations):
+            self.assertIn(qint.quantrand(0, 1000), range(0, 1000))
+
+    def test_rand_big_w_step(self):
+        """
+        Tests whether quantrand stays within a big range
+        with a step
+        """
+        iterations = 100
+        for i in range(iterations):
+            self.assertIn(qint.quantrand(0, 1000, step= 10), range(0, 1000))
+
+        
+    

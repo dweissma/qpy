@@ -34,12 +34,20 @@ class qint(object):
         if self.initial > (2**maxBits) - 1:
             #There aren't enough bits left to initialize such a large number
             raise OverflowError("initial value is too large to fit into available qubits")
+        elif self.small and self.initial > 2**5 -1:
+            raise OverflowError("initial value is too large to fit in a small int")
+        elif self.big and self.initial > 2**32 -1:
+            raise OverflowError("initial value is too large to fit in a big int")
+        elif self.small:
+            return self.qclass.chunk(5)
+        elif self.big:
+            return self.qclass.chunk(32)
         elif self.initial < 2**14 and maxBits >= 14 and not self.small and not self.big:
             #14 is currently the largest number of qubits on an IBMQ computer so allot that much memory
             return self.qclass.chunk(14)
-        elif self.initial < 2**32 - 1 and maxBits >= 32 and self.big:
+        elif self.initial < 2**32 - 1 and maxBits >= 32:
             return self.qclass.chunk(32)
-        elif self.initial < 2**5 - 1 and maxBits >= 5 and self.small:
+        elif self.initial < 2**5 - 1 and maxBits >= 5:
             #5 is the smallest amount of qubits available on a backend
             return self.qclass.chunk(5)
         else:
@@ -64,6 +72,17 @@ class qint(object):
         for i in range(len(self.classBits)):
             self.qclass.write("measure q[%d] " % self.qubits[i] + "-> c[%d]; \n" % self.classBits[i])
     
+
+    def extract_result(self, result):
+        """
+        Extracts and returns the int from the 
+        qclass result
+        """
+        binaryStr = ''
+        for i in self.classBits:
+                binaryStr = result[i] + binaryStr
+        val = int(binaryStr, 2)
+        return val
 
     @classmethod
     def quantrand(cls, start, stop, step=1, simulator= False):
@@ -92,10 +111,7 @@ class qint(object):
             thisInt.all_vals()
             thisInt.measure()
             result = thisQclass.get_result()
-            binaryStr = ''
-            for i in thisInt:
-                binaryStr = result[i] + binaryStr
-            val = int(binaryStr, 2)
+            val = thisInt.extract_result(result)
             val = (val + start) * step
             if val < stop:
                 return val
