@@ -19,26 +19,26 @@ class qclass(object):
         self.qasmDir = qasmDir
         self.qasmDir += '.txt'
         self.output = open(self.qasmDir, 'a+')
-        self._nextQubit = 0
+        self._availableQubits = [x for x in range(0, self.size)]
+        self._nextQubit = self._availableQubits.pop()
 
     @property
     def bitsLeft(self):
-        return self.size - self._nextQubit
+        return len(self._availableQubits) + 1
 
     def chunk(self, bits: int):
         """
         Allots qubits from memory
-        Returns the indices of the first qubit in the allotted range
-        and the first qubit not in the alloted range
+        Returns a list of qubit indices  
         """
         if bits <= 0:
             raise ValueError("bits must be a positive integer")
         if self._nextQubit + bits > self.size:
             raise OverflowError("Insufficient qubits on the chosen backend")
-        toReturn = (None, None)
-        toReturn[0] = self._nextQubit
-        self._nextQubit += bits
-        toReturn[1] = self._nextQubit
+        toReturn = []
+        while len(toReturn) < bits:
+            toReturn.append(self._nextQubit)
+            self._nextQubit = self._availableQubits.pop()
         return toReturn
         
     def start(self, quantSize= self.size, classSize= self.size):
