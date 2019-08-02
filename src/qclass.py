@@ -19,13 +19,42 @@ class qclass(object):
         self.qasmDir = qasmDir
         self.qasmDir += '.txt'
         self.output = open(self.qasmDir, 'a+')
+        self._nextQubit = 0
+
+    @property
+    def bitsLeft(self):
+        return self.size - self._nextQubit
+
+    def chunk(self, bits: int):
+        """
+        Allots qubits from memory
+        Returns the indices of the first qubit in the allotted range
+        and the first qubit not in the alloted range
+        """
+        if bits <= 0:
+            raise ValueError("bits must be a positive integer")
+        if self._nextQubit + bits > self.size:
+            raise OverflowError("Insufficient qubits on the chosen backend")
+        toReturn = (None, None)
+        toReturn[0] = self._nextQubit
+        self._nextQubit += bits
+        toReturn[1] = self._nextQubit
+        return toReturn
         
-    def initialize_quantum_registers(self, quantSize= self.size, classSize= self.size):
+    def start(self, quantSize= self.size, classSize= self.size):
+        """
+        provides the starting point for the qasm file
+        """
+        if quantSize > self.size:
+            raise ValueError("given quantsize is larger than the number of available qubits")
+        self._initialize_quantum_registers(quantSize= quantSize, classSize= classSize)
+
+    def _initialize_quantum_registers(self, quantSize= self.size, classSize= self.size):
         toWrite = """
         OPENQASM 2.0; \n
         include "qelib1.inc"; \n
-        qreg[$$QSIZE$$]; \n
-        creg[$$CSIZE$$]; \n
+        qreg q[$$QSIZE$$]; \n
+        creg c[$$CSIZE$$]; \n
         """
         toWrite.replace("$$QSIZE$$", str(quantSize))
         toWrite.replace("$$CSIZE$$", str(classSize))

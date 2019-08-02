@@ -14,7 +14,7 @@ class BaseTestQclass(unittest.TestCase):
     def setUp(self):
         qiskit.IBMQ.load_account()
         self.qclass = qclass()
-        self.qclass.initialize_quantum_registers()
+        self.qclass.start()
         
     def tearDown(self):
         try:
@@ -61,7 +61,7 @@ class InitTestQclass(unittest.TestCase):
         Tests whether the backend can be changed with a string
         """
         self.qclass = qclass(backend= "ibmqx4")
-        self.qclass.initialize_quantum_registers() 
+        self.qclass.start() 
         self.qclass.run()
     
     def test_real_backend(self):
@@ -71,7 +71,7 @@ class InitTestQclass(unittest.TestCase):
         provider = qiskit.IBMQ.get_provider()
         backend = provider.backends("ibmqx4")[0]
         self.qclass = qclass(backend= backend)
-        self.qclass.initialize_quantum_registers()
+        self.qclass.start()
         self.qclass.run()
 
     def test_other_dir(self):
@@ -79,7 +79,7 @@ class InitTestQclass(unittest.TestCase):
         Tests the ability to specify a DIR for the QASM file
         """
         self.qclass = qclass(qasmDir= "TestDir")
-        self.qclass.initialize_quantum_registers()
+        self.qclass.start()
         self.qclass.run()
     
     
