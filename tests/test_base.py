@@ -5,13 +5,15 @@ Test cases for the core modules
 import unittest
 import qiskit
 import os
-from src import qclass
+from src.qclass import qclass
+from src.qint import qint
 
 class BaseTestQclass(unittest.TestCase):
     """
     Tests the basic methods of the qclass
     """
     def setUp(self):
+        
         qiskit.IBMQ.load_account()
         self.qclass = qclass()
         self.qclass.start()
@@ -82,4 +84,19 @@ class InitTestQclass(unittest.TestCase):
         self.qclass.start()
         self.qclass.run()
     
+
+class TestBasicQint(unittest.TestCase):
+    """
+    Tests a qint with a standard
+    qclass and tests the class methods
+    """
+    def setUp(self):
+        qiskit.IBMQ.load_account()
+        self.qclass = qclass()
+        self.qclass.start()
     
+    def tearDown(self):
+        try:
+            os.remove(self.qclass.qasmDir)
+        except:
+            print("Couldn't remove compiled OpenQASM at %s location" % self.qclass.qasmDir)
