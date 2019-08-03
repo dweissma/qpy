@@ -84,6 +84,14 @@ class qint(object):
         val = int(binaryStr, 2)
         return val
 
+    def increment(self):
+        """
+        increment the qint
+        """
+        i = 1
+        
+        qclass.write("x q[%d]; \n" % self.qubits[0])
+
     @classmethod
     def quantrand(cls, start, stop, step=1, simulator= False):
         """

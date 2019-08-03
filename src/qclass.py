@@ -57,7 +57,14 @@ class qclass(object):
             toReturn.append(self._nextQubit)
             self._nextQubit = self._availableQubits.pop()
         return toReturn
-        
+
+    def return_chunk(self, bits: list):
+        """
+        Returns a list of temporary qubits to available qubits
+        Be sure to reset these qubits to be 0 before returning them
+        """
+        self._availableQubits += bits
+
     def start(self, quantSize= None, classSize= None):
         """
         provides the starting point for the qasm file
