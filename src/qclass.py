@@ -1,6 +1,9 @@
 import qiskit
+from qiskit.aqua.circuits.gates import mct
 import uuid
 import random
+import math
+import re
 
 class qclass(object):
     """
@@ -121,3 +124,77 @@ class qclass(object):
         maxVal = max(counts.values())
         choices = [x for x, y in counts.items() if y == maxVal]
         return random.choice(choices)[::-1] #Reverse the string so that the index matches that assigned by chunk 
+
+    def ccx(self, a: int, b: int, c: int):
+        """
+        Applies the ccx gate with a and b as control qubits
+        and c as the bit to be flipped
+        """
+        self.write("ccx q[%d]," % a, + " q[%d]," % b + " q[%d]; \n" % c)
+
+    def cx(self, a: int, b: int):
+        """
+        Applies the controled bit flip
+        gate to b using a as a control qubit
+        """
+        self.write("cx q[%d]," % a + " q[%d]; \n" % b)
+
+    def ugate(self, gate, a: int):
+        """
+        Applies a unary gate represented by a string
+        to qubit a
+        """
+        self.write(gate + " q[%d]; \n" % a)
+
+    def request_chunk(self, size: int):
+        """
+        Checkes if enough available qubits exist to 
+        serve a chunk and returns the bits if so or False
+        if not
+        """
+        if size > self.bitsLeft:
+            return False
+        else:
+            toReturn = []
+            while len(toReturn) < size:
+                toReturn.append(self._nextQubit)
+                self._nextQubit = self._availableQubits.pop()
+        return toReturn
+
+    def mct(self, control: list, target: int, ancillary= []):
+        """
+        A controlled not gate with an arbritrary number
+        of qubits
+        """
+        if len(control) <= 2:
+            raise ValueError("There should be more than 2 control qubits use ccx for 2 controls and cx for 1 control")
+        if not ancillary:
+            q = qiskit.QuantumRegister(len(control) + 1)
+            qc = qiskit.QuantumCircuit(q)
+            controls = [q[i] for i in range(len(control))]
+            qc.mct(controls, q[len(controls)], None, mode='noancilla')
+            toWrite = qc.qasm()
+            qreg = toWrite.index("qreg ") + 5
+            regI = toWrite[qreg:toWrite.index("]", start=qreg)]
+            toWrite.replace(regI, 'q')
+            for i in range(len(control)):
+                toWrite.replace('q[' + i + ']', 'q[' + control[i] + ']')
+            toWrite.replace('q[' + len(control) + ']', 'q[' + target + ']')
+        else:
+            q = qiskit.QuantumRegister(len(control) + len(ancillary) + 1)
+            qc = qiskit.QuantumCircuit(q)
+            controls = [q[i] for i in range(len(control))]
+            ancillaries = [q[i + len(control)] for i in range(len(ancillary))]
+            qc.mct(controls, q[len(controls) + len(ancillaries)], ancillaries, mode='basic')
+            toWrite = qc.qasm()
+            qreg = toWrite.index("qreg ") + 5
+            regI = toWrite[qreg:toWrite.index("]", start=qreg)]
+            toWrite.replace(regI, 'q')
+            for i in range(len(control)):
+                toWrite.replace('q[' + i + ']', 'q[' + control[i] + ']')
+            for i in range(len(ancillary)):
+                currentI = i + len(control)
+                toWrite.replace('q[' + currentI + ']', 'q[' + ancillary[i] + ']')
+            toWrite.replace('q[' + (len(control) + len(ancillary)) + ']', 'q[' + target + ']')
+        toWrite = toWrite[toWrite.index("h q["):]
+        self.write(toWrite)

@@ -86,11 +86,35 @@ class qint(object):
 
     def increment(self):
         """
-        increment the qint
+        Increments a qint
         """
-        i = 1
-        
-        qclass.write("x q[%d]; \n" % self.qubits[0])
+        if len(self.qubits) > 3:
+            ancqubits = self.qclass.request_chunk(len(self.qubits)-2)
+            if ancqubits:
+                i = len(self.qubits) - 1
+                while i > 2:
+                    self.qclass.mct(self.qubits[:i], self.qubits[i], ancillary = ancqubits)
+                    i -= 1
+                self.qclass.return_chunk(ancqubits)
+            else:
+                i = len(self.qubits) - 1
+                while i > 2:
+                    self.qclass.mct(self.qubits[:i], self.qubits[i], ancillary = [])
+                    i -= 1
+            self.qclass.ccx(self.qubits[0], self.qubits[1], self.qubits[2])
+            self.qclass.cx(self.qubits[0], self.qubits[1])
+            self.qclass.ugate("x", self.qubits[0])
+        elif len(self.qubits) == 3:
+            self.qclass.ccx(self.qubits[0], self.qubits[1], self.qubits[2])
+            self.qclass.cx(self.qubits[0], self.qubits[1])
+            self.qclass.ugate("x", self.qubits[0])
+        elif len(self.qubits) == 2:
+            self.qclass.cx(self.qubits[0], self.qubits[1])
+            self.qclass.ugate("x", self.qubits[0])
+        elif len(self.qubits) == 1:
+            self.qclass.ugate("x", self.qubits[0])
+        else:
+            raise ValueError("Can not increment qint which has no qubits (Did you accidently make size=0?)")
 
     @classmethod
     def quantrand(cls, start, stop, step=1, simulator= False):
