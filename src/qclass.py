@@ -154,6 +154,8 @@ class qclass(object):
         serve a chunk and returns the bits if so or False
         if not
         """
+        if size <= 0:
+            return []
         if size > self.bitsLeft:
             return False
         else:
@@ -168,8 +170,6 @@ class qclass(object):
         A controlled not gate with an arbritrary number
         of qubits
         """
-        if len(control) <= 2:
-            raise ValueError("There should be more than 2 control qubits use ccx for 2 controls and cx for 1 control")
         if not ancillary:
             q = qiskit.QuantumRegister(len(control) + 1)
             qc = qiskit.QuantumCircuit(q)
@@ -209,4 +209,15 @@ class qclass(object):
         """
         theta = math.asin(math.sqrt(prob))
         self.write("ry(%d) " % 2*theta + "q[%d]; \n" % target)
+
+    def cprob(self, control: int, target: int, prob: float):
+        """
+        Places a qubit into a probability if the control gate 
+        Assumes the target begins in a |"0"> state
+        """
+        theta = math.asin(math.sqrt(prob))
+        self.ugate("h", target)
+        self.write("crz(%d) " % 2*theta + "q[%d] " % control + "q[%d]; \n" % target)
+        self.ugate("h", target)
+
         

@@ -12,6 +12,7 @@ class qint(object):
         self.initial = value
         self.big = big
         self.small = small
+        self.firstQubit = None #The qubit that should be measured first if applicable
         if not size:
             self.qubits = self.smart_chunk()
         else:
@@ -192,7 +193,66 @@ class qint(object):
         largest = max(nums)
         size = cls.coerce_size(qclass, largest, small=small, big=big)
         thisQint = cls(qclass, size=size)
-        
+        bnums = [bin(x)[-1:2:-1] for x in nums]
+        i = len(bnums) - 1
+        tempChunk = qclass.chunk(1)
+        tempBit = tempChunk[0]
+        while i > 0:
+            mem = []
+            if all([x[i] == '0' for x in bnums]):
+                #This state can be a pure 0 entangled to nothing
+                pass
+            elif all([x[i] == '1' for x in bnums]):
+                #This state can be a pure 1 entangled to nothing
+                thisQint.qclass.ugate("x", thisQint.qubits[i])
+            else:
+                #The state is not pure so we have to do some entangling
+                for k in range(i):
+                    thisQint.qclass.ugate("h", thisQint.qubits[k]) #Place all the previous qubits in a superposition
+                for strings in bnums:
+                    substring = strings[:i]
+                    if substring not in mem:
+                        mem.append(substring)
+                        toEntangle = [x for x in bnums if x.startswith(substring)] #All strings with the prefix
+                        if all([x[i] == '0' for x in toEntangle]):
+                            #We don't have to do anything here either
+                            pass
+                        elif all([x[i] == '1' for x in toEntangle]):
+                            #Controlled not this position
+                            for pos in range(len(substring)):
+                                if substring[pos] == '0':
+                                    thisQint.qclass.ugate('x', thisQint.qubits[pos])
+                            ancillary = thisQint.qclass.request_chunk(i-2)
+                            thisQint.qclass.mct(thisQint.qubits[:i], tempBit, ancillary = ancillary)
+                            thisQint.qclass.cx(tempBit, thisQint[i])
+                            thisQint.qclass.mct(thisQint.qubits[:i], tempBit, ancillary = ancillary)
+                            for pos in range(len(substring)):
+                                if substring[pos] == '0':
+                                    thisQint.qclass.ugate('x', thisQint.qubits[pos])
+                            if ancillary:
+                                qclass.return_chunk(ancillary)
+                        else:
+                            #Controlled q_prob at this position
+                            for pos in range(len(substring)):
+                                if substring[pos] == '0':
+                                    thisQint.qclass.ugate('x', thisQint.qubits[pos])
+                            prob = len([x for x in toEntangle if x[i] == '1'])/len(toEntangle) #Probability that this pos is 1 with the current substring
+                            ancillary = thisQint.qclass.request_chunk(i-2)
+                            thisQint.qclass.mct(thisQint.qubits[:i], tempBit, ancillary = ancillary)
+                            thisQint.qclass.cprob(tempBit, thisQint[i], prob)
+                            thisQint.qclass.mct(thisQint.qubits[:i], tempBit, ancillary = ancillary)
+                            for pos in range(len(substring)):
+                                if substring[pos] == '0':
+                                    thisQint.qclass.ugate('x', thisQint.qubits[pos])
+                            if ancillary:
+                                qclass.return_chunk(ancillary)
+                for k in range(i):
+                    thisQint.qclass.ugate("h", thisQint.qubits[k])
+            i -= 1
+        prob = len([x for x in bnums if x[0] == '1'])/len(bnums)
+        thisQint.qclass.q_prob(thisQint[0], prob)
+        thisQint.firstQubit = thisQint.qubits[0]
+        qclass.return_chunk(tempChunk)
 
 
     def measure_safe(self, first):
