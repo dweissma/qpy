@@ -23,9 +23,9 @@ class qclass(object):
             self.backend = backend
         self.size = self.backend.configuration().n_qubits
         self.qasmDir = qasmDir
-        self.qasmDir += '.txt'
+        self.qasmDir += '.txt' #TO DO tests and change to .qasm
         self.output = open(self.qasmDir, 'a+')
-        self.ran = False
+        self.collapsed = False
 
     @property
     def bitsLeft(self):
@@ -112,7 +112,7 @@ class qclass(object):
         Use get_result to get a single result
         """
         self.circuit = qiskit.QuantumCircuit.from_qasm_file(self.qasmDir)
-        self.ran = True
+        self.collapsed = True
         return qiskit.execute(self.circuit, backend= self.backend)
     
     def get_result(self):
@@ -200,3 +200,13 @@ class qclass(object):
             toWrite.replace('q[' + (len(control) + len(ancillary)) + ']', 'q[' + target + ']')
         toWrite = toWrite[toWrite.index("h q["):]
         self.write(toWrite)
+
+    def q_prob(self, target: int, prob: float):
+        """
+        Places a qubit in a state that has a 
+        probability of prob of observing a 1
+        Assumes the qubit begins in a |"0"> state
+        """
+        theta = math.asin(math.sqrt(prob))
+        self.write("ry(%d) " % 2*theta + "q[%d]; \n" % target)
+        

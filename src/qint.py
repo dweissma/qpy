@@ -1,6 +1,7 @@
 import qiskit
 from . import qclass
 import math
+from warnings import warn
 
 class qint(object):
     """
@@ -12,7 +13,7 @@ class qint(object):
         self.big = big
         self.small = small
         if not size:
-            self.qubits = self.coerce_size()
+            self.qubits = self.smart_chunk()
         else:
             self.qubits = self.qclass.chunk(size)
         strInit = str(bin(self.initial))[2:]
@@ -25,10 +26,11 @@ class qint(object):
             i += 1
         self.qclass.write(toWrite)
 
-    def coerce_size(self):
+    def smart_chunk(self):
         """
         Attempts to somewhat intelligently decide
         on a reasonable amount of qubits to be allotted
+        Returns the properly sized chunk
         """
         maxBits = self.qclass.bitsLeft
         if self.initial > (2**maxBits) - 1:
@@ -53,6 +55,36 @@ class qint(object):
         else:
             return self.qclass.chunk(maxBits)
 
+    @classmethod
+    def coerce_size(cls, qclass, intial, small=False, big=False):
+        """
+        Attempts to somewhat intelligently decide
+        on a reasonable amount of qubits to be allotted
+        Returns the number
+        """
+        maxBits = qclass.bitsLeft
+        if initial > (2**maxBits) - 1:
+            #There aren't enough bits left to initialize such a large number
+            raise OverflowError("initial value is too large to fit into available qubits")
+        elif small and initial > 2**5 -1:
+            raise OverflowError("initial value is too large to fit in a small int")
+        elif big and initial > 2**32 -1:
+            raise OverflowError("initial value is too large to fit in a big int")
+        elif small:
+            return 5
+        elif big:
+            return 32
+        elif initial < 2**14 and maxBits >= 14 and not small and not big:
+            #14 is currently the largest number of qubits on an IBMQ computer so allot that much memory
+            return 14
+        elif initial < 2**32 - 1 and maxBits >= 32:
+            return 32
+        elif initial < 2**5 - 1 and maxBits >= 5:
+            #5 is the smallest amount of qubits available on a backend
+            return 5
+        else:
+            return maxBits
+
     def all_vals(self):
         """
         When called on a pure int places the qint into
@@ -68,10 +100,10 @@ class qint(object):
         returning the list of indices of 
         classical bits the measurements are stored in
         """
+        self.qclass.collapsed = True
         self.classBits = self.qclass.chunk_class(len(self.qubits))
         for i in range(len(self.classBits)):
             self.qclass.write("measure q[%d] " % self.qubits[i] + "-> c[%d]; \n" % self.classBits[i])
-    
 
     def extract_result(self, result):
         """
@@ -149,3 +181,31 @@ class qint(object):
                 return val
             else:
                 continue
+
+
+    @classmethod
+    def super_position(cls, nums, qclass, size=None, small=False, big=False):
+        """
+        Returns a qint object which is a 
+        superposition of each number
+        """
+        largest = max(nums)
+        size = cls.coerce_size(qclass, largest, small=small, big=big)
+        thisQint = cls(qclass, size=size)
+        
+
+
+    def measure_safe(self, first):
+        """
+        Measures qints
+        also warns the user if measurements on other qubits
+        have already been made which may affect the current measurement
+        """
+        if self.qclass.collapsed:
+            warn("Warning: qubits on this qclass have collapsed if qubits were entangled it could effect measurements", RuntimeWarning)
+        self.classBits = self.qclass.chunk_class(len(self.qubits))
+        firstI = self.qubits.index(first)
+        self.qclass.write("measure q[%d] " % first + "-> c[%d]; \n" % self.classBits[firstI])
+        for i in range(len(self.classBits)):
+            if i != firstI:
+                self.qclass.write("measure q[%d] " % self.qubits[i] + "-> c[%d]; \n" % self.classBits[i])
