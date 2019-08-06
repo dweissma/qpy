@@ -13,7 +13,6 @@ class BaseTestQclass(unittest.TestCase):
     Tests the basic methods of the qclass
     """
     def setUp(self):
-        
         qiskit.IBMQ.load_account()
         self.qclass = qclass()
         self.qclass.start()
@@ -42,6 +41,38 @@ class BaseTestQclass(unittest.TestCase):
         except:
             raise AssertionError("qclass failed to run without adding anything")
 
+    def test_chunk(self):
+        """
+        tests whether the chunk method 
+        """
+        chunk = self.qclass.chunk(3)
+        self.assertEqual([0, 1, 2], chunk)
+
+    def test_chunk_overlap(self):
+        """
+        tests whether chunks overlap
+        """
+        chunk1 = self.qclass.chunk(8)
+        chunk2 = self.qclass.chunk(8)
+        for bits in chunk1:
+            self.assertFalse(bits in chunk2)
+    
+    def test_chunk_error(self):
+        """
+        tests whether chunk properly errors
+        """
+        chunk1 = self.qclass.chunk(20)
+        self.assertRaises(OverflowError, self.qclass.chunk(20))
+
+    def test_request_chunk(self):
+        """
+        tests whether request chunk works as intended
+        """
+        chunk = self.qclass.request_chunk(10)
+        while chunk:
+            self.assertTrue(len(chunk) == 10)
+            chunk = self.qclass.request_chunk(10)
+        self.assertFalse(chunk)
 
 class InitTestQclass(unittest.TestCase):
     """
@@ -179,5 +210,14 @@ class TestBasicQint(unittest.TestCase):
         for i in range(iterations):
             self.assertIn(qint.quantrand(0, 1000, step= 10), range(0, 1000))
 
+    def test_increment(self):
+        """
+        Tests whether qint increments pure values
+        """
+        a = qint(self.qclass, value= 68)
+        a.increment()
+        a.increment()
+        a.measure()
+        result = self.qclass.get_result()
+        self.assertEqual(a.extract_result(result), 68+2)
         
-    

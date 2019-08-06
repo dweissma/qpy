@@ -7,7 +7,9 @@ import re
 
 class qclass(object):
     """
-    Abstract class used as a starting point for quantum data structures
+    Abstract class used as a backend for quantum data structures
+    Keeping a set of quantum registers and qubits
+    One qclass compiles to a single quantum circuit
     """
     def __init__(self, backend= None, qasmDir= uuid.uuid4().hex):
         """
