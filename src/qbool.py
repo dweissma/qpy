@@ -192,3 +192,12 @@ class qbool(object):
         self.iqand(first, other)
         other.qnot()
         
+    def free(self):
+        """
+        Frees the qubit storing the qbool back
+        to the qclass 
+        qbools should not be referenced afterwards
+        Any hanging references will likely cause an error
+        """
+        self.qclass.return_chunk([self.qubit])
+        self.qubit = None
