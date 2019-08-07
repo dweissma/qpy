@@ -284,5 +284,8 @@ class qint(object):
         toReturn = {}
         for string, count in counts.items():
             result = self.extract_result(string)
-            toReturn[result] = count
+            try:
+                toReturn[result] += count
+            except KeyError:
+                toReturn[result] = count
         return toReturn
