@@ -1,4 +1,4 @@
-import qiskit
+from qiskit import QuantumCircuit, QuantumRegister, execute, IBMQ
 from qiskit.aqua.circuits.gates import mct
 import uuid
 import random
@@ -103,7 +103,7 @@ class qclass(object):
         self._nextClassBit = self._availableClassBits.pop()
 
     def _initialize_backend(self, backend="ibmq_qasm_simulator"):
-        self.backend = qiskit.IBMQ.get_provider().backends(backend)[0]
+        self.backend = IBMQ.get_provider().backends(backend)[0]
 
     def run(self):
         """
@@ -111,9 +111,9 @@ class qclass(object):
         returns a qiskit results object
         Use get_result to get a single result
         """
-        self.circuit = qiskit.QuantumCircuit.from_qasm_file(self.qasmDir)
+        self.circuit = QuantumCircuit.from_qasm_file(self.qasmDir)
         self.collapsed = True
-        return qiskit.execute(self.circuit, backend= self.backend)
+        return execute(self.circuit, backend= self.backend)
     
     def get_result(self):
         """
@@ -171,8 +171,8 @@ class qclass(object):
         of qubits
         """
         if not ancillary:
-            q = qiskit.QuantumRegister(len(control) + 1)
-            qc = qiskit.QuantumCircuit(q)
+            q = QuantumRegister(len(control) + 1)
+            qc = QuantumCircuit(q)
             controls = [q[i] for i in range(len(control))]
             qc.mct(controls, q[len(controls)], None, mode='noancilla')
             toWrite = qc.qasm()
@@ -183,8 +183,8 @@ class qclass(object):
                 toWrite.replace('q[' + i + ']', 'q[' + control[i] + ']')
             toWrite.replace('q[' + len(control) + ']', 'q[' + target + ']')
         else:
-            q = qiskit.QuantumRegister(len(control) + len(ancillary) + 1)
-            qc = qiskit.QuantumCircuit(q)
+            q = QuantumRegister(len(control) + len(ancillary) + 1)
+            qc = QuantumCircuit(q)
             controls = [q[i] for i in range(len(control))]
             ancillaries = [q[i + len(control)] for i in range(len(ancillary))]
             qc.mct(controls, q[len(controls) + len(ancillaries)], ancillaries, mode='basic')
@@ -208,7 +208,7 @@ class qclass(object):
         Assumes the qubit begins in a |"0"> state
         """
         theta = math.asin(math.sqrt(prob))
-        self.write("ry(%d) " % 2*theta + "q[%d]; \n" % target)
+        self.write("rx(%d) " % 2*theta + "q[%d]; \n" % target)
 
     def cprob(self, control: int, target: int, prob: float):
         """

@@ -1,4 +1,3 @@
-import qiskit
 from . import qclass
 import math
 from warnings import warn
