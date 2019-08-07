@@ -348,6 +348,7 @@ class TestBasicQbool(unittest.TestCase):
         counts = self.qclass.get_counts()
         counts = base.extract_counts(counts)
         self.assertTrue(kinda_close_tuples([(counts[True]/1024, 0.75), (counts[False]/1024, 0.25)]))
+
     def test_entangle(self):
         """
         Tests whether an entangled qbool works 
@@ -361,3 +362,217 @@ class TestBasicQbool(unittest.TestCase):
         entangledCounts = entangled.extract_counts(counts)
         self.assertEqual(baseCounts[False], entangledCounts[False])
         self.assertEqual(baseCounts[True], entangledCounts[True])
+
+    def test_qand(self):
+        """
+        Tests whether qand properly ands 2 
+        independent qbools
+        """
+        a = qbool(self.qclass, prob=0.5)
+        b = qbool(self.qclass, prob=0.5)
+        c = a.qand(b)
+        c.measure()
+        counts = self.qclass.get_counts()
+        counts = c.extract_counts(counts)
+        self.assertTrue([(counts[False], 0.75), (counts[True], 0.25)])
+    
+    def test_qand_entangled(self):
+        """
+        Tests whether qand properly ands entangled
+        qbools
+        """
+        a = qbool(self.qclass, prob=0.5)
+        b = a.entangle()
+        c = a.qand(b)
+        c.measure()
+        counts = self.qclass.get_counts()
+        counts = c.extract_counts(counts)
+        self.assertTrue([(counts[False], 0.5), (counts[True], 0.5)])
+    
+    def test_qor(self):
+        """
+        Tests whether qor properly ors 
+        independent qbools
+        """
+        a = qbool(self.qclass, prob=0.5)
+        b = qbool(self.qclass, prob=0.5)
+        c = a.qor(b)
+        c.measure()
+        counts = self.qclass.get_counts()
+        counts = c.extract_counts(counts)
+        self.assertTrue([(counts[True], 0.75), (counts[False], 0.25)])
+
+    def test_qor_entangled(self):
+        a = qbool(self.qclass, prob=0.5)
+        b = a.entangle()
+        c = a.qor(b)
+        c.measure()
+        counts = self.qclass.get_counts()
+        counts = c.extract_counts(counts)
+        self.assertTrue([(counts[False], 0.5), (counts[True], 0.5)])
+    
+    def test_prob_not(self):
+        """
+        Tests whether qnot properly
+        nots a superposition
+        """
+        base = qbool(self.qclass, prob=0.75)
+        base.qnot()
+        base.measure()
+        counts = self.qclass.get_counts()
+        counts = base.extract_counts(counts)
+        self.assertTrue(kinda_close_tuples([(counts[True]/1024, 0.25), (counts[False]/1024, 0.75)]))
+
+    def test_qnand(self):
+        """
+        Tests the qnand on 2 independent qbools
+        """
+        a = qbool(self.qclass, prob=0.5)
+        b = qbool(self.qclass, prob=0.5)
+        c = a.qnand(b)
+        c.measure()
+        counts = self.qclass.get_counts()
+        counts = c.extract_counts(counts)
+        self.assertTrue([(counts[True], 0.75), (counts[False], 0.25)])
+    
+    def test_qnand_vs_qand(self):
+        """
+        Tests whether qand and qnand are
+        opposites
+        """
+        a = qbool(self.qclass, prob=0.5)
+        b = qbool(self.qclass, prob=0.5)
+        c = a.qnand(b)
+        d = a.qand(b)
+        c.measure()
+        d.measure()
+        counts = self.qclass.get_counts()
+        ccounts = c.extract_counts(counts)
+        dcounts = d.extract_counts(counts)
+        self.assertEqual(ccounts[True], dcounts[False])
+        self.assertEqual(ccounts[False], dcounts[True])
+
+    def tests_qxor_vs_qiff(self):
+        """
+        Tests whether qxor is equivalent to 
+        not qiff
+        """
+        a = qbool(self.qclass, prob=0.5)
+        b = qbool(self.qclass, prob=0.5)
+        c = a.qxor(b)
+        d = a.qiff(b)
+        c.measure()
+        d.measure()
+        counts = self.qclass.get_counts()
+        ccounts = c.extract_counts(counts)
+        dcounts = d.extract_counts(counts)
+        self.assertEqual(ccounts[True], dcounts[False])
+        self.assertEqual(ccounts[False], dcounts[True])
+
+    def test_qif(self):
+        """
+        Tests whether qif works properly
+        """
+        a = qbool(self.qclass, prob=0.5)
+        b = qbool(self.qclass, prob=0.5)
+        c = a.qif(b)
+        c.measure()
+        counts = self.qclass.get_counts()
+        counts = c.extract_counts(counts)
+        self.assertTrue([(counts[True], 0.75), (counts[False], 0.25)])
+    
+    def test_iqand(self):
+        """
+        Tests whether iqand actually inverts qand
+        """
+        a = qbool(self.qclass, prob = 0.7)
+        b = qbool(self.qclass, prob =0.35)
+        c = a.qand(b)
+        c.iqand(a, b)
+        c.measure()
+        counts = self.qclass.get_counts()
+        counts = c.extract_counts(counts)
+        self.assertRaises(KeyError, counts[True]) #Tests that True is not in the possibilities
+        self.assertTrue(False in counts.keys())
+
+    def test_iqor(self):
+        """
+        Tests whether iqor actually inverts qor
+        """
+        a = qbool(self.qclass, prob = 0.7)
+        b = qbool(self.qclass, prob =0.35)
+        c = a.qor(b)
+        c.iqor(a, b)
+        c.measure()
+        counts = self.qclass.get_counts()
+        counts = c.extract_counts(counts)
+        self.assertRaises(KeyError, counts[True]) #Tests that True is not in the possibilities
+        self.assertTrue(False in counts.keys())
+    
+    def test_iqnand(self):
+        """
+        Tests whether iqnand actually inverts qnand
+        """
+        a = qbool(self.qclass, prob = 0.7)
+        b = qbool(self.qclass, prob =0.35)
+        c = a.qnand(b)
+        c.iqnand(a, b)
+        c.measure()
+        counts = self.qclass.get_counts()
+        counts = c.extract_counts(counts)
+        self.assertRaises(KeyError, counts[True]) #Tests that True is not in the possibilities
+        self.assertTrue(False in counts.keys())
+
+    def test_iqxor(self):
+        """
+        Tests whether iqxor actually inverts qxor
+        """
+        a = qbool(self.qclass, prob = 0.7)
+        b = qbool(self.qclass, prob =0.35)
+        c = a.qxor(b)
+        c.iqxor(a, b)
+        c.measure()
+        counts = self.qclass.get_counts()
+        counts = c.extract_counts(counts)
+        self.assertRaises(KeyError, counts[True]) #Tests that True is not in the possibilities
+        self.assertTrue(False in counts.keys())
+
+    def test_iqiff(self):
+        """
+        Tests whether iqiff actually inverts qiff
+        """
+        a = qbool(self.qclass, prob = 0.7)
+        b = qbool(self.qclass, prob =0.35)
+        c = a.qiff(b)
+        c.iqiff(a, b)
+        c.measure()
+        counts = self.qclass.get_counts()
+        counts = c.extract_counts(counts)
+        self.assertRaises(KeyError, counts[True]) #Tests that True is not in the possibilities
+        self.assertTrue(False in counts.keys())
+    
+    def test_iqif(self):
+        """
+        Tests whether iqif actually inverts qif
+        """
+        a = qbool(self.qclass, prob = 0.7)
+        b = qbool(self.qclass, prob =0.35)
+        c = a.qif(b)
+        c.iqif(a, b)
+        c.measure()
+        counts = self.qclass.get_counts()
+        counts = c.extract_counts(counts)
+        self.assertRaises(KeyError, counts[True]) #Tests that True is not in the possibilities
+        self.assertTrue(False in counts.keys())
+
+    def test_free(self):
+        """
+        Tests whether free returns the qubit
+        """
+        a = qbool(self.qclass, prob = 0.7)
+        b = qbool(self.qclass, prob =0.35)
+        c = a.qand(b)
+        c.iqand(a, b)
+        before = self.qclass.bitsLeft
+        c.free()
+        self.assertEqual(self.qclass.bitsLeft, before + 1)

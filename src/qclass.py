@@ -29,7 +29,10 @@ class qclass(object):
 
     @property
     def bitsLeft(self):
-        return len(self._availableQubits) + 1
+        if self._nextQubit is not None:
+            return len(self._availableQubits) + 1
+        else:
+            return 0
 
     def write(self, toWrite):
         self.output.write(toWrite)
@@ -59,8 +62,11 @@ class qclass(object):
             raise OverflowError("Insufficient qubits on the chosen backend")
         toReturn = []
         while len(toReturn) < bits:
-            toReturn.append(self._nextQubit)
-            self._nextQubit = self._availableQubits.pop()
+            try:
+                toReturn.append(self._nextQubit)
+                self._nextQubit = self._availableQubits.pop()
+            except IndexError:
+                self._nextQubit = None
         return toReturn
 
     def return_chunk(self, bits: list):
@@ -69,6 +75,8 @@ class qclass(object):
         Be sure to reset these qubits to be 0 before returning them
         """
         self._availableQubits += bits
+        if self._nextQubit is None and bits:
+            self._nextQubit = self._availableQubits.pop()
 
     def start(self, quantSize= None, classSize= None):
         """

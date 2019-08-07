@@ -133,7 +133,7 @@ class qbool(object):
         to 2 qbools with self => other
         """
         other.qnot()
-        result = self.qand(other)
+        result = self.qnand(other)
         other.qnot()
         return result
 
@@ -189,7 +189,7 @@ class qbool(object):
         Inverts the qif gate
         """
         other.qnot()
-        self.iqand(first, other)
+        self.iqnand(first, other)
         other.qnot()
         
     def free(self):
