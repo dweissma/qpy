@@ -193,10 +193,12 @@ class qint(object):
         size = cls.coerce_size(qclass, largest, small=small, big=big)
         thisQint = cls(qclass, size=size)
         bnums = [bin(x)[-1:2:-1] for x in nums]
-        i = len(bnums) - 1
         tempChunk = qclass.chunk(1)
         tempBit = tempChunk[0]
-        while i > 0:
+        i = 1
+        prob = len([x for x in bnums if x[0] == '1'])/len(bnums)
+        thisQint.qclass.q_prob(thisQint[0], prob)
+        while i < len(bnums):
             mem = []
             if all([x[i] == '0' for x in bnums]):
                 #This state can be a pure 0 entangled to nothing
@@ -247,9 +249,7 @@ class qint(object):
                                 qclass.return_chunk(ancillary)
                 for k in range(i):
                     thisQint.qclass.ugate("h", thisQint.qubits[k])
-            i -= 1
-        prob = len([x for x in bnums if x[0] == '1'])/len(bnums)
-        thisQint.qclass.q_prob(thisQint[0], prob)
+            i += 1
         thisQint.firstQubit = thisQint.qubits[0]
         qclass.return_chunk(tempChunk)
 
