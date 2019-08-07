@@ -69,3 +69,79 @@ class qbool(object):
             except KeyError:
                 toReturn[result] = count
         return toReturn
+
+    def qand(self, other: qbool):
+        """
+        Applies a quantum and gate to 2 qbool objects
+        Returning the resulting qbool
+        """
+        result = qbool(self.qclass)
+        self.qclass.ccx(self.qubit, other.qubit, result.qubit)
+        return result
+
+    def qor(self, other: qbool):
+        """
+        Applies a quantum or gate to 2 qbool objects
+        Returning the resulting qbool
+        """
+        result = qbool(self.qclass)
+        self.qclass.ugate("x", self.qubit)
+        self.qclass.ugate("x", other.qubit)
+        self.qclass.ugate("x", result.qubit)
+        self.qclass.ccx(self.qubit, other.qubit, result.qubit)
+        self.qclass.ugate("x", self.qubit)
+        self.qclass.ugate("x", other.qubit)
+        return result
+    
+    def qnot(self):
+        """
+        Nots the qbool
+        """
+        self.qclass.ugate("x", self.qubit)
+
+    def qnand(self, other: qbool):
+        """
+        Applies a quantum nand gate with the
+        current qbool and the other qbool
+        """
+        result = self.qand(other)
+        result.qnot()
+        return result
+
+    def qxor(self, other: qbool):
+        """
+        Applies a quantum xor gate with
+        the current qbool and the other qbool
+        """
+        result = qbool(self.qclass)
+        self.qclass.ugate("x", self.qubit)
+        self.qclass.ccx(self.qubit, other.qubit, result.qubit)
+        self.qclass.ugate("x", self.qubit)
+        self.qclass.ugate("x", other.qubit)
+        self.qclass.ccx(self.qubit, other.qubit, result.qubit)
+        self.qclass.ugate("x", other.qubit)
+        return result
+
+    def qiff(self, other: qbool):
+        """
+        Applies the biimplication <=>
+        to 2 qbools
+        """
+        result = qbool(self.qclass)
+        self.qclass.ccx(self.qubit, other.qubit, result.qubit)
+        self.qclass.ugate("x", self.qubit)
+        self.qclass.ugate("x", other.qubit)
+        self.qclass.ccx(self.qubit, other.qubit, result.qubit)
+        self.qclass.ugate("x", other.qubit)
+        self.qclass.ugate("x", self.qubit)
+        return result
+
+    def qif(self, other: qbool):
+        """
+        Applies the implication =>
+        to 2 qbools with self => other
+        """
+        self.other.qnot()
+        result = self.qand(other)
+        self.other.qnot()
+        return result
