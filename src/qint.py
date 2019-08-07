@@ -269,3 +269,15 @@ class qint(object):
         for i in range(len(self.classBits)):
             if i != firstI:
                 self.qclass.write("measure q[%d] " % self.qubits[i] + "-> c[%d]; \n" % self.classBits[i])
+
+    def extract_counts(self, counts: dict):
+        """
+        Extract the counts from a counts dict
+        returns a dict with the observed values as
+        the keys and the counts as values
+        """
+        toReturn = {}
+        for string, count in counts.items():
+            result = self.extract_result(string)
+            toReturn[result] = count
+        return toReturn

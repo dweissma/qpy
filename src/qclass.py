@@ -220,4 +220,12 @@ class qclass(object):
         self.write("crz(%d) " % 2*theta + "q[%d] " % control + "q[%d]; \n" % target)
         self.ugate("h", target)
 
+    def get_counts(self):
+        """
+        Returns the counts for each result
+        """
+        result = self.run()
+        counts = result.result().get_counts()
+        return counts
+
         
