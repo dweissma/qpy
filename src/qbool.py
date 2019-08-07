@@ -8,18 +8,8 @@ class qbool(object):
         if type(initial) == bool:
             if initial:
                 self.qclass.ugate('x', self.qubit)
-                self.pureVal = True
-            else:
-                self.pureVal = False
-            self.pure = True
         elif type(prob) == float:
             self.qclass.q_prob(self.qubit, prob)
-            self.pure = False
-            self.pureVal = None
-        else:
-            self.pure = True
-            self.pureVal = False
-        self.classBit = None
     
     def entangle(self):
         """
@@ -96,6 +86,7 @@ class qbool(object):
     def qnot(self):
         """
         Nots the qbool
+        Also works as its own inverse
         """
         self.qclass.ugate("x", self.qubit)
 
@@ -141,7 +132,63 @@ class qbool(object):
         Applies the implication =>
         to 2 qbools with self => other
         """
-        self.other.qnot()
+        other.qnot()
         result = self.qand(other)
-        self.other.qnot()
+        other.qnot()
         return result
+
+    
+    def iqand(self, first: qbool, other: qbool):
+        """
+        Inverts the qand gate
+        """
+        first.qclass.ccx(first.qubit, other.qubit, self.qubit)
+
+    def iqor(self, first: qbool, other: qbool):
+        """
+        Inverts the qor gate
+        """
+        self.qclass.ugate("x", first.qubit)
+        self.qclass.ugate("x", other.qubit)
+        self.qclass.ccx(first.qubit, other.qubit, self.qubit)
+        self.qclass.ugate("x", first.qubit)
+        self.qclass.ugate("x", other.qubit)
+        self.qclass.ugate("x", self.qubit)
+        
+    def iqnand(self, first: qbool, other: qbool):
+        """
+        Inverts the qnand gate
+        """
+        self.qnot()
+        self.iqand(first, other)
+
+    def iqxor(self, first: qbool, other: qbool):
+        """
+        Inverts the qxor gate
+        """
+        self.qclass.ugate("x", first.qubit)
+        self.qclass.ccx(first.qubit, other.qubit, self.qubit)
+        self.qclass.ugate("x", first.qubit)
+        self.qclass.ugate("x", other.qubit)
+        self.qclass.ccx(first.qubit, other.qubit, self.qubit)
+        self.qclass.ugate("x", other.qubit)
+
+    def iqiff(self, first: qbool, other: qbool):
+        """
+        Inverts the qiff gate
+        """
+        self.qclass.ccx(first.qubit, other.qubit, self.qubit)
+        self.qclass.ugate("x", first.qubit)
+        self.qclass.ugate("x", other.qubit)
+        self.qclass.ccx(first.qubit, other.qubit, self.qubit)
+        self.qclass.ugate("x", other.qubit)
+        self.qclass.ugate("x", first.qubit)
+
+    def iqif(self, first: qbool, other: qbool):
+        """
+        Inverts the qif gate
+        """
+        other.qnot()
+        self.iqand(first, other)
+        other.qnot()
+        
