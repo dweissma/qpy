@@ -220,4 +220,46 @@ class TestBasicQint(unittest.TestCase):
         a.measure()
         result = self.qclass.get_result()
         self.assertEqual(a.extract_result(result), 68+2)
-        
+
+    def test_sp_1(self):
+        """
+        Tests whether qint properly makes
+        a qint with 1 int
+        """
+        s = qint.super_position([7], self.qclass)
+        s.measure_sup()
+        counts = self.qclass.get_counts()
+        counts = s.extract_counts(counts)
+        self.assertTrue(len(counts.items()) == 1 and 7 in counts.keys())
+
+    def test_sp_2(self):
+        """
+        Tests whether both vals in a superposition qint
+        are both measured and the probs are about equal
+        """
+        s = qint.super_position([7, 8], self.qclass)
+        s.measure_sup()
+        counts = self.qclass.get_counts()
+        counts = s.extract_counts(counts)
+        self.assertTrue(len(counts.items()) == 2 and 7 in counts.keys() and 8 in counts.keys())
+
+    def test_sp_8(self):
+        """
+        Tests whether superposition works with 8 nums
+        """
+        s = qint.super_position([31, 30, 29, 28, 27, 26, 25, 24], self.qclass)
+        s.measure_sup()
+        counts = self.qclass.get_counts()
+        counts = s.extract_counts(counts)
+        self.assertTrue(len(counts.items()) == 8 and all([x in counts.keys() for x in range(24, 32)]))
+
+    def test_increment_sup(self):
+        """
+        Tests whether increment works on super position
+        """
+        s = qint.super_position([7, 8], self.qclass)
+        s.increment()
+        s.measure_sup()
+        counts = self.qclass.get_counts()
+        counts = s.extract_counts(counts)
+        self.assertTrue(len(counts.items()) == 2 and 9 in counts.keys() and 8 in counts.keys())

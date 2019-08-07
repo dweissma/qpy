@@ -254,6 +254,12 @@ class qint(object):
         thisQint.firstQubit = thisQint.qubits[0]
         qclass.return_chunk(tempChunk)
 
+    def measure_sup(self):
+        """
+        Special measurement technique for insuring 
+        superpositions have the proper probabilities
+        """
+        self.measure_safe(self.firstQubit)
 
     def measure_safe(self, first):
         """
