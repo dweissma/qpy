@@ -5,8 +5,36 @@ Test cases for the core modules
 import unittest
 import qiskit
 import os
+from random import choice
 from src.qclass import qclass
 from src.qint import qint
+from src.qbool import qbool
+
+
+
+def kinda_close(iter, error = 0.05):
+    """
+    Checks if all items in iter are within an error
+    of each other
+    """
+    for combs in combinations(iter, 2):
+        a = combs[0]
+        b = combs[1]
+        if abs((a - b)/max([a, b])) >= error:
+            return False
+    return True
+        
+def kinda_close_tuples(iter, error = 0.05):
+    """
+    Checks if each tuple in the iter contain
+    2 kinda close elements
+    """
+    for tup in iter:
+        a = tup[0]
+        b = tup[1]
+        if abs((a - b)/max([a, b])) >= error:
+            return False
+    return True
 
 class BaseTestQclass(unittest.TestCase):
     """
@@ -253,6 +281,16 @@ class TestBasicQint(unittest.TestCase):
         counts = s.extract_counts(counts)
         self.assertTrue(len(counts.items()) == 8 and all([x in counts.keys() for x in range(24, 32)]))
 
+    def test_sp_8_close(self):
+        """
+        Tests whether superposition works with 8 nums
+        """
+        s = qint.super_position([31, 30, 29, 28, 27, 26, 25, 24], self.qclass)
+        s.measure_sup()
+        counts = self.qclass.get_counts()
+        counts = s.extract_counts(counts)
+        self.assertTrue(kinda_close(list(counts.values()))) #All values should be kinda close
+
     def test_increment_sup(self):
         """
         Tests whether increment works on super position
@@ -263,3 +301,63 @@ class TestBasicQint(unittest.TestCase):
         counts = self.qclass.get_counts()
         counts = s.extract_counts(counts)
         self.assertTrue(len(counts.items()) == 2 and 9 in counts.keys() and 8 in counts.keys())
+
+    
+class TestBasicQbool(unittest.TestCase):
+    """
+    Tests a qbool with a standard
+    qclass and tests the class methods
+    """
+    def setUp(self):
+        qiskit.IBMQ.load_account()
+        self.qclass = qclass()
+        self.qclass.start()
+    
+    def tearDown(self):
+        try:
+            os.remove(self.qclass.qasmDir)
+        except:
+            print("Couldn't remove compiled OpenQASM at %s location" % self.qclass.qasmDir)
+
+    def test_base_is_false(self):
+        """
+        Tests whether qbool properly initializes to 
+        false with no initial value
+        """
+        base = qbool(self.qclass)
+        base.measure()
+        result = self.qclass.get_result()
+        self.assertFalse(base.extract_result())
+
+    def test_init(self):
+        """
+        Tests whether initial value is properly assigned
+        """
+        base = qbool(self.qclass, initial=True)
+        base.measure()
+        result = self.qclass.get_result()
+        self.assertTrue(base.extract_result())
+
+    def test_prob(self):
+        """
+        Tests whether a qbool initialized 
+        with a certain probability actually measures close to said prob
+        """
+        base = qbool(self.qclass, prob=0.75)
+        base.measure()
+        counts = self.qclass.get_counts()
+        counts = base.extract_counts(counts)
+        self.assertTrue(kinda_close_tuples([(counts[True]/1024, 0.75), (counts[False]/1024, 0.25)]))
+    def test_entangle(self):
+        """
+        Tests whether an entangled qbool works 
+        """
+        base = qbool(self.qclass, prob=0.5)
+        entangled = base.entangle()
+        base.measure()
+        entangled.measure()
+        counts = self.qclass.get_counts()
+        baseCounts = base.extract_counts(counts)
+        entangledCounts = entangled.extract_counts(counts)
+        self.assertEqual(baseCounts[False], entangledCounts[False])
+        self.assertEqual(baseCounts[True], entangledCounts[True])
