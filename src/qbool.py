@@ -201,3 +201,35 @@ class qbool(object):
         """
         self.qclass.return_chunk([self.qubit])
         self.qubit = None
+
+    def qmand(self, others: list):
+        """
+        Ands every qbool in an iterable with self
+        """
+        popatTheEnd = False
+        if self not in others:
+            others.append(self)
+            popatTheEnd = True
+        result = qbool()
+        control = [x.qubit for x in others]
+        ancillary = self.qclass.request_chunk(len(control)-2)
+        self.qclass.mct(control, result.qubit, ancillary=ancillary)
+        self.qclass.return_chunk(ancillary)
+        if popatTheEnd:
+            others.pop()
+        return result
+    
+    def iqmand(self, first: qbool, others: list):
+        """
+        Inverts the qmand gate
+        """
+        popatTheEnd = False
+        if first not in others:
+            others.append(first)
+            popatTheEnd = True
+        control = [x.qubit for x in others]
+        ancillary = self.qclass.request_chunk(len(control)-2)
+        self.qclass.mct(control, self.qubit, ancillary=ancillary)
+        self.qclass.return_chunk(ancillary)
+        if popatTheEnd:
+            others.pop()
