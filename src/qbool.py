@@ -204,7 +204,8 @@ class qbool(object):
 
     def qmand(self, others: list):
         """
-        Ands every qbool in an iterable with self
+        Ands every qbool in an iterable with self and returns the
+        result as a qbool
         """
         popatTheEnd = False
         if self not in others:
@@ -216,6 +217,7 @@ class qbool(object):
         self.qclass.mct(control, result.qubit, ancillary=ancillary)
         self.qclass.return_chunk(ancillary)
         if popatTheEnd:
+            #Used so that the others list does not change
             others.pop()
         return result
     
@@ -231,5 +233,48 @@ class qbool(object):
         ancillary = self.qclass.request_chunk(len(control)-2)
         self.qclass.mct(control, self.qubit, ancillary=ancillary)
         self.qclass.return_chunk(ancillary)
+        if popatTheEnd:
+            others.pop()
+    
+    def qmor(self, others: list):
+        """
+        Ors every qbool in an iterable with self 
+        and returns the result as a qbool
+        """
+        popatTheEnd = False
+        if self not in others:
+            others.append(self)
+            popatTheEnd = True
+        result  = qbool()
+        control = [x.qubit for x in others]
+        ancillary = self.qclass.request_chunk(len(control)-2)
+        for x in control:
+            self.qclass.ugate("x", x)
+        self.qclass.ugate("x", result.qubit)
+        self.qclass.mct(control, result.qubit, ancillary=ancillary)
+        self.qclass.return_chunk(ancillary)
+        for x in control:
+            self.qclass.ugate("x", x)
+        if popatTheEnd:
+            others.pop()
+        return result
+
+    def iqmor(self, first: qbool, others: list):
+        """
+        Inverts the qmor gate
+        """
+        popatTheEnd = False
+        if first not in others:
+            others.append(first)
+            popatTheEnd = True
+        control = [x.qubit for x in others]
+        ancillary = self.qclass.request_chunk(len(control)-2)
+        for x in control:
+            self.qclass.ugate("x", x)
+        self.qclass.mct(control, self.qubit, ancillary=ancillary)
+        self.qclass.return_chunk(ancillary)
+        for x in control:
+            self.qclass.ugate("x", x)
+        self.qclass.ugate("x", self.qubit)
         if popatTheEnd:
             others.pop()
