@@ -21,6 +21,7 @@ def kinda_close(iter, error = 0.05):
         a = combs[0]
         b = combs[1]
         if abs((a - b)/max([a, b])) >= error:
+            print(str(a) + " is not that close to " + str(b))
             return False
     return True
         
@@ -33,6 +34,7 @@ def kinda_close_tuples(iter, error = 0.05):
         a = tup[0]
         b = tup[1]
         if abs((a - b)/max([a, b])) >= error:
+            print(str(a) + " is not that close to " + str(b))
             return False
     return True
 
@@ -576,3 +578,55 @@ class TestBasicQbool(unittest.TestCase):
         before = self.qclass.bitsLeft
         c.free()
         self.assertEqual(self.qclass.bitsLeft, before + 1)
+
+    def test_qmand(self):
+        """
+        Tests whether qmand is the
+        same as 2 qand gates
+        """
+        a = qbool(self.qlcass, prob = 0.7)
+        b = qbool(self.qclass, prob = 0.4)
+        c =  qbool(self.qclass, prob = 0.9)
+        control = [b, c]
+        result = a.qmand(control)
+        self.assertListEqual(control, [b, c])
+        other = a.qand(b).qand(c)
+        result.measure()
+        other.measure()
+        counts = self.qclass.get_counts()
+        resultCounts = result.extract_counts(counts)
+        otherCounts = other.extract_counts()
+        toTest = []
+        for k, v in resultCounts.items():
+            try:
+                otherVal = otherCounts[k]
+                toTest.append((v, otherVal))
+            except KeyError:
+                toTest.append((v, 0))
+        self.assertTrue(kinda_close_tuples(toTest))
+
+    def test_qmor(self):
+        """
+        Tests whether qmor is the same
+        as 2 qor gates
+        """
+        a = qbool(self.qlcass, prob = 0.7)
+        b = qbool(self.qclass, prob = 0.4)
+        c =  qbool(self.qclass, prob = 0.9)
+        control = [b, c]
+        result = a.qmor(control)
+        self.assertListEqual(control, [b, c])
+        other = a.qmor(b).qmor(c)
+        result.measure()
+        other.measure()
+        counts = self.qclass.get_counts()
+        resultCounts = result.extract_counts(counts)
+        otherCounts = other.extract_counts()
+        toTest = []
+        for k, v in resultCounts.items():
+            try:
+                otherVal = otherCounts[k]
+                toTest.append((v, otherVal))
+            except KeyError:
+                toTest.append((v, 0))
+        self.assertTrue(kinda_close_tuples(toTest))
