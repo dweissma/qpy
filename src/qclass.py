@@ -111,7 +111,10 @@ class qclass(object):
         self._nextClassBit = self._availableClassBits.pop()
 
     def _initialize_backend(self, backend="ibmq_qasm_simulator"):
-        self.backend = IBMQ.get_provider().backends(backend)[0]
+        self.backend = IBMQ.get_backend(backend)
+        #TO-DO once IBMQ.get_provider() actually works use that
+        #self.backend = IBMQ.get_provider().get_backend(backend)
+
 
     def run(self):
         """

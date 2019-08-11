@@ -6,6 +6,7 @@ import unittest
 import qiskit
 import os
 from random import choice
+from itertools import combinations
 from src.qclass import qclass
 from src.qint import qint
 from src.qbool import qbool
@@ -43,7 +44,8 @@ class BaseTestQclass(unittest.TestCase):
     Tests the basic methods of the qclass
     """
     def setUp(self):
-        qiskit.IBMQ.load_account()
+        #TO-DO Change load_accounts -> load_account before deprecation
+        qiskit.IBMQ.load_accounts()
         self.qclass = qclass()
         self.qclass.start()
         
@@ -109,7 +111,7 @@ class InitTestQclass(unittest.TestCase):
     Tests corner cases of initializing a qclass
     """
     def setUP(self):
-        qiskit.IBMQ.load_account()
+        qiskit.IBMQ.load_accounts()
 
     def tearDown(self):
         try:
@@ -152,7 +154,7 @@ class TestBasicQint(unittest.TestCase):
     qclass and tests the class methods
     """
     def setUp(self):
-        qiskit.IBMQ.load_account()
+        qiskit.IBMQ.load_accounts()
         self.qclass = qclass()
         self.qclass.start()
     
@@ -311,7 +313,7 @@ class TestBasicQbool(unittest.TestCase):
     qclass and tests the class methods
     """
     def setUp(self):
-        qiskit.IBMQ.load_account()
+        qiskit.IBMQ.load_accounts()
         self.qclass = qclass()
         self.qclass.start()
     
