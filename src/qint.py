@@ -1,4 +1,5 @@
-from . import qclass
+from __future__ import annotations
+from qclass import qclass
 import math
 from warnings import warn
 
@@ -17,7 +18,7 @@ class qint(object):
         else:
             self.qubits = self.qclass.chunk(size)
         strInit = str(bin(self.initial))[2:]
-        strInit = reversed(strInit)
+        strInit = strInit[::-1]
         toWrite = ''
         i = 0
         while i < len(strInit):
@@ -56,7 +57,7 @@ class qint(object):
             return self.qclass.chunk(maxBits)
 
     @classmethod
-    def coerce_size(cls, qclass, intial, small=False, big=False):
+    def coerce_size(cls, qclass, initial, small=False, big=False):
         """
         Attempts to somewhat intelligently decide
         on a reasonable amount of qubits to be allotted

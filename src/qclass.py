@@ -1,3 +1,4 @@
+from __future__ import annotations
 from qiskit import QuantumCircuit, QuantumRegister, execute, IBMQ
 from qiskit.aqua.circuits.gates import mct
 import uuid
@@ -48,7 +49,7 @@ class qclass(object):
         toReturn = []
         while len(toReturn) < bits:
             toReturn.append(self._nextClassBit)
-            self._nextClassBit = self._availableClassBits.pop()
+            self._nextClassBit = self._availableClassBits.pop(0)
         return toReturn
 
     def chunk(self, bits: int):
@@ -64,7 +65,7 @@ class qclass(object):
         while len(toReturn) < bits:
             try:
                 toReturn.append(self._nextQubit)
-                self._nextQubit = self._availableQubits.pop()
+                self._nextQubit = self._availableQubits.pop(0)
             except IndexError:
                 self._nextQubit = None
         return toReturn
@@ -76,7 +77,7 @@ class qclass(object):
         """
         self._availableQubits += bits
         if self._nextQubit is None and bits:
-            self._nextQubit = self._availableQubits.pop()
+            self._nextQubit = self._availableQubits.pop(0)
 
     def start(self, quantSize= None, classSize= None):
         """
@@ -106,9 +107,9 @@ class qclass(object):
         self.output.write(toWrite)
         self.size = quantSize
         self._availableQubits = [x for x in range(0, self.size)]
-        self._nextQubit = self._availableQubits.pop()
+        self._nextQubit = self._availableQubits.pop(0)
         self._availableClassBits = [x for x in range(0, classSize)]
-        self._nextClassBit = self._availableClassBits.pop()
+        self._nextClassBit = self._availableClassBits.pop(0)
 
     def _initialize_backend(self, backend="ibmq_qasm_simulator"):
         self.backend = IBMQ.get_backend(backend)
@@ -173,7 +174,7 @@ class qclass(object):
             toReturn = []
             while len(toReturn) < size:
                 toReturn.append(self._nextQubit)
-                self._nextQubit = self._availableQubits.pop()
+                self._nextQubit = self._availableQubits.pop(0)
         return toReturn
 
     def mct(self, control: list, target: int, ancillary= []):

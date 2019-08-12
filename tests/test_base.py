@@ -7,9 +7,9 @@ import qiskit
 import os
 from random import choice
 from itertools import combinations
-from src.qclass import qclass
-from src.qint import qint
-from src.qbool import qbool
+from qclass import qclass
+from qint import qint
+from qbool import qbool
 
 
 
@@ -44,12 +44,14 @@ class BaseTestQclass(unittest.TestCase):
     Tests the basic methods of the qclass
     """
     def setUp(self):
+        super().setUp()
         #TO-DO Change load_accounts -> load_account before deprecation
         qiskit.IBMQ.load_accounts()
         self.qclass = qclass()
         self.qclass.start()
         
     def tearDown(self):
+        super().tearDown()
         try:
             os.remove(self.qclass.qasmDir)
         except:
@@ -69,7 +71,7 @@ class BaseTestQclass(unittest.TestCase):
         
     def test_will_run(self):
         try:
-            qclass.run()
+            self.qclass.run()
         except:
             raise AssertionError("qclass failed to run without adding anything")
 
@@ -111,9 +113,11 @@ class InitTestQclass(unittest.TestCase):
     Tests corner cases of initializing a qclass
     """
     def setUP(self):
+        super().setUp()
         qiskit.IBMQ.load_accounts()
 
     def tearDown(self):
+        super().tearDown()
         try:
             self.qclass.run()
             os.remove(self.qclass.qasmDir)
@@ -154,11 +158,13 @@ class TestBasicQint(unittest.TestCase):
     qclass and tests the class methods
     """
     def setUp(self):
+        super().setUp()
         qiskit.IBMQ.load_accounts()
         self.qclass = qclass()
         self.qclass.start()
     
     def tearDown(self):
+        super().tearDown()
         try:
             os.remove(self.qclass.qasmDir)
         except:
@@ -313,11 +319,13 @@ class TestBasicQbool(unittest.TestCase):
     qclass and tests the class methods
     """
     def setUp(self):
+        super().setUp()
         qiskit.IBMQ.load_accounts()
         self.qclass = qclass()
         self.qclass.start()
     
     def tearDown(self):
+        super().tearDown()
         try:
             os.remove(self.qclass.qasmDir)
         except:

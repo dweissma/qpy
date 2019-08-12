@@ -1,8 +1,11 @@
+from __future__ import annotations
+from qclass import qclass
+
 class qbool(object):
     """
     Quantum boolean class
     """
-    def __init__(self, qclass, initial = None, prob = None):
+    def __init__(self, qclass: qclass, initial = None, prob = None):
         self.qclass = qclass
         self.qubit = self.qclass.chunk(1)[0]
         if type(initial) == bool:
