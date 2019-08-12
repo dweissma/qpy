@@ -97,13 +97,13 @@ class qclass(object):
         if classSize is None:
             classSize = self.size 
         toWrite = """
-        OPENQASM 2.0; \n
-        include "qelib1.inc"; \n
-        qreg q[$$QSIZE$$]; \n
+        OPENQASM 2.0;
+        include "qelib1.inc";
+        qreg q[$$QSIZE$$]; 
         creg c[$$CSIZE$$]; \n
         """
-        toWrite.replace("$$QSIZE$$", str(quantSize))
-        toWrite.replace("$$CSIZE$$", str(classSize))
+        toWrite = toWrite.replace("$$QSIZE$$", str(quantSize))
+        toWrite = toWrite.replace("$$CSIZE$$", str(classSize))
         self.output.write(toWrite)
         self.size = quantSize
         self._availableQubits = [x for x in range(0, self.size)]
@@ -112,9 +112,9 @@ class qclass(object):
         self._nextClassBit = self._availableClassBits.pop(0)
 
     def _initialize_backend(self, backend="ibmq_qasm_simulator"):
-        self.backend = IBMQ.get_backend(backend)
+        #self.backend = IBMQ.get_backend(backend)
         #TO-DO once IBMQ.get_provider() actually works use that
-        #self.backend = IBMQ.get_provider().get_backend(backend)
+        self.backend = IBMQ.get_provider().get_backend(backend)
 
 
     def run(self):
@@ -123,6 +123,7 @@ class qclass(object):
         returns a qiskit results object
         Use get_result to get a single result
         """
+        self.output.close()
         self.circuit = QuantumCircuit.from_qasm_file(self.qasmDir)
         self.collapsed = True
         return execute(self.circuit, backend= self.backend)
@@ -174,7 +175,7 @@ class qclass(object):
             toReturn = []
             while len(toReturn) < size:
                 toReturn.append(self._nextQubit)
-                self._nextQubit = self._availableQubits.pop(0)
+                self._nextQubit = self._availableQubits.pop()
         return toReturn
 
     def mct(self, control: list, target: int, ancillary= []):

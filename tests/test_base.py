@@ -45,8 +45,7 @@ class BaseTestQclass(unittest.TestCase):
     """
     def setUp(self):
         super().setUp()
-        #TO-DO Change load_accounts -> load_account before deprecation
-        qiskit.IBMQ.load_accounts()
+        qiskit.IBMQ.load_account()
         self.qclass = qclass()
         self.qclass.start()
         
@@ -96,7 +95,7 @@ class BaseTestQclass(unittest.TestCase):
         tests whether chunk properly errors
         """
         chunk1 = self.qclass.chunk(20)
-        self.assertRaises(OverflowError, self.qclass.chunk(20))
+        self.assertRaises(OverflowError, self.qclass.chunk, 20)
 
     def test_request_chunk(self):
         """
@@ -114,7 +113,7 @@ class InitTestQclass(unittest.TestCase):
     """
     def setUP(self):
         super().setUp()
-        qiskit.IBMQ.load_accounts()
+        qiskit.IBMQ.load_account()
 
     def tearDown(self):
         super().tearDown()
@@ -159,7 +158,7 @@ class TestBasicQint(unittest.TestCase):
     """
     def setUp(self):
         super().setUp()
-        qiskit.IBMQ.load_accounts()
+        qiskit.IBMQ.load_account()
         self.qclass = qclass()
         self.qclass.start()
     
@@ -320,7 +319,7 @@ class TestBasicQbool(unittest.TestCase):
     """
     def setUp(self):
         super().setUp()
-        qiskit.IBMQ.load_accounts()
+        qiskit.IBMQ.load_account()
         self.qclass = qclass()
         self.qclass.start()
     
